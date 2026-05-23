@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>EPS Facile</title>
+  <link rel="stylesheet" href="style_web.css">
+  <link rel="icon" type="image/avif" href="icon.avif">
+  <script src="https://kit.fontawesome.com/f4552ef528.js" crossorigin="anonymous"></script>
+</head>
+
+<body style="background-color: rgb(159, 129, 236);">
+
+<h1>EPS – Calcul tes notes</h1>
+<h3>Calculez facilement vos notes en EPS</h3>
+
+<div class="ligne">
+  <div class="bloc">
+    <i class="fa-solid fa-person-running"></i><br>
+    <a href="#demifond" class="btn">Demi-fond</a>
+  </div>
+</div>
+
+<div id="demifond" class="section">
+  <h2>Demi-fond</h2>
+  <p>Choisissez le genre</p>
+
+  <div class="ligne">
+    <div class="bloc">
+      <a href="#demifond-garcon">
+        <i style="color: blue" class="fa-solid fa-mars genre"></i>
+        <p>Garçon</p>
+      </a>
+    </div>
+
+    <div class="bloc">
+      <a href="#demifond-fille">
+        <i style="color: pink " class="fa-solid fa-venus genre"></i>
+        <p>Fille</p>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Section Garçon -->
+<div id="demifond-garcon" class="section">
+  <h2>Demi-fond – Garçon</h2>
+  <form class="formulaire" id="form-garcon">
+    <label>Temps de prédiction (C1)</label>
+    <input type="text" id="pred-garcon" placeholder="ex : 3'40">
+
+    <label>Temps course 1</label>
+    <input type="text" id="c1-garcon" placeholder="ex : 3'42">
+
+    <label>Temps course 2</label>
+    <input type="text" id="c2-garcon" placeholder="ex : 3'45">
+
+    <label>Temps course 3</label>
+    <input type="text" id="c3-garcon" placeholder="ex : 3'47">
+
+    <button type="button" onclick="calculer('G')">Calculer</button>
+
+    <div id="result-garcon" class="note-resultat"></div>
+    <p class="note">
+      Note estimée selon le barème du baccalauréat
+    </p>
+  </form>
+</div>
+
+<!-- Section Fille -->
+<div id="demifond-fille" class="section">
+  <h2>Demi-fond – Fille</h2>
+  <form class="formulaire" id="form-fille">
+    <label>Temps de prédiction (C1)</label>
+    <input type="text" id="pred-fille" placeholder="ex : 4'00">
+
+    <label>Temps course 1</label>
+    <input type="text" id="c1-fille" placeholder="ex : 4'02">
+
+    <label>Temps course 2</label>
+    <input type="text" id="c2-fille" placeholder="ex : 4'05">
+
+    <label>Temps course 3</label>
+    <input type="text" id="c3-fille" placeholder="ex : 4'08">
+
+    <button type="button" onclick="calculer('F')">Calculer</button>
+
+    <div id="result-fille" class="note-resultat"></div>
+    <p class="note">
+      Note estimée selon le barème du baccalauréat
+    </p>
+  </form>
+</div>
+
+<script>
+    const lst_fille = [14.45, 14.21, 13.57, 13.33, 13.12, 12.51, 12.33, 12.15, 12, 11.45, 11.33, 11.21, 11.09, 10.57, 10.45, 10.33, 10.21, 10.09, 9.57, 9.45];
+    const lst_garcon = [12.15, 11.51, 11.27, 11.03, 10.42, 10.21, 10.03, 9.45, 9.30, 9.15, 9.03, 8.51, 8.39, 8.27, 8.15, 8.03, 7.51, 7.39, 7.27, 7.15];
+    const afl_note = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12];
+    const it_case = [25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2];
+
+    class Point {
+        constructor(x, y) {
+            this.x = x;
+            this.y = y;
+        }
+        static equation_droite(A, B) {
+            return (B.y - A.y) / (B.x - A.x);
+        }
+        static calculer_note(A, B, y_milieu) {
+            const m = Point.equation_droite(A, B);
+            const p = A.y - m * A.x;
+            const x_milieu = (y_milieu - p) / m;
+            return x_milieu;
+        }
+    }
+
+    function toSeconds(t) {
+        if (!t.includes("'")) return 0;
+        const parts = t.split("'");
+        const minutes = parseInt(parts[0]) || 0;
+        const seconds = parseInt(parts[1]) || 0;
+        return minutes * 60 + seconds;
+    }
+
+    function toTimeFormat(total_seconds) {
+        const minutes = Math.floor(total_seconds / 60);
+        const seconds = total_seconds % 60;
+        return `${minutes}'${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function toDecimalMinutes(total_sec) {
+        const minutes = Math.floor(total_sec / 60);
+        const seconds = total_sec % 60;
+        return minutes + (seconds / 100);
+    }
+
+    function trouver_case(temps_eleve, it_eleve, genre) {
+        const lst = (genre === 'F') ? lst_fille : lst_garcon;
+        let temps_case_trouve = null;
+        for (let i = 0; i < lst.length; i++) {
+            const temps_case = lst[i];
+            if (i === lst.length - 1) {
+                if (temps_eleve <= temps_case) temps_case_trouve = lst[i];
+            } else {
+                const temps_case_suivante = lst[i + 1];
+                if (temps_eleve > temps_case_suivante && temps_eleve <= temps_case) {
+                    temps_case_trouve = lst[i];
+                }
+            }
+        }
+        return [temps_case_trouve, it_eleve];
+    }
+
+    function trouver_x(temps_eleve, it_eleve, genre) {
+        const [xB, xA] = trouver_case(temps_eleve, it_eleve, genre);
+        const lst = (genre === 'F') ? lst_fille : lst_garcon;
+        let temps_idx = 0;
+        let indice_idx = 0;
+        for (let i = 0; i < lst.length; i++) {
+            if (lst[i] === xB) {
+                temps_idx = i;
+                break;
+            }
+        }
+        for (let i = 0; i < it_case.length; i++) {
+            if (it_case[i] === xA) {
+                indice_idx = i;
+                break;
+            }
+        }
+        const indice = indice_idx * 0.92;
+        const temps = temps_idx * 1.12;
+        return [indice, temps];
+    }
+
+    function obtenir_note(temps_eleve, it_eleve, genre) {
+        const [xA, xB] = trouver_x(temps_eleve, it_eleve, genre);
+        const A = new Point(xA, 0);
+        const B = new Point(xB, 5.5);
+        const x_intersec = Point.calculer_note(A, B, 2.7);
+        const pas_note = 21.4 / 23;
+        let idx_note = Math.round(x_intersec / pas_note);
+        idx_note = Math.max(0, Math.min(afl_note.length - 1, idx_note));
+        return afl_note[idx_note];
+    }
+
+    function calculer(genre) {
+        const suffix = (genre === 'G') ? 'garcon' : 'fille';
+        const pred_val = document.getElementById(`pred-${suffix}`).value;
+        const c1_val = document.getElementById(`c1-${suffix}`).value;
+        const c2_val = document.getElementById(`c2-${suffix}`).value;
+        const c3_val = document.getElementById(`c3-${suffix}`).value;
+
+        if (!pred_val || !c1_val || !c2_val || !c3_val) {
+            alert("Veuillez remplir tous les champs (format ex: 3'40)");
+            return;
+        }
+
+        const pred_sec = toSeconds(pred_val);
+        const c1_sec = toSeconds(c1_val);
+        const c2_sec = toSeconds(c2_val);
+        const c3_sec = toSeconds(c3_val);
+
+        const E1 = Math.abs(pred_sec - c1_sec);
+        const E2 = Math.abs(c1_sec - c2_sec);
+        const IT = E1 + E2;
+        const total_sec = c1_sec + c2_sec + c3_sec;
+        const temps_max = toDecimalMinutes(total_sec);
+
+        const note = obtenir_note(temps_max, IT, genre);
+        
+        const resultDiv = document.getElementById(`result-${suffix}`);
+        resultDiv.innerHTML = `
+            <strong>Résultats :</strong><br><br>
+            Note estimée : ${note} / 12<br>
+            Temps cumulé : ${toTimeFormat(total_sec)}<br>
+            E1 (écart projet → C1) : ${E1} sec<br>
+            E2 (écart C1 → C2) : ${E2} sec<br>
+            Indice technique (IT) : ${IT} sec
+        `;
+        resultDiv.style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
